@@ -1071,7 +1071,7 @@ private struct SessionCard: View {
                                 Text(">")
                                     .font(.system(size: fontSize, weight: .bold, design: .monospaced))
                                     .foregroundStyle(Color(red: 0.3, green: 0.85, blue: 0.4))
-                                Text(inlineMarkdown(msg.text))
+                                Text(renderUserText(msg.text))
                                     .font(.system(size: fontSize, weight: .medium, design: .monospaced))
                                     .foregroundStyle(.white.opacity(0.9))
                                     .lineLimit(1)
@@ -1143,7 +1143,11 @@ private struct SessionCard: View {
     }
 
     private func renderMarkdown(_ text: String) -> AttributedString {
-        inlineMarkdown(text)
+        ChatMessageTextFormatter.inlineMarkdown(text)
+    }
+
+    private func renderUserText(_ text: String) -> AttributedString {
+        ChatMessageTextFormatter.literalText(text)
     }
 
     private func timeAgo(_ date: Date) -> String {
@@ -1641,22 +1645,3 @@ struct MiniAgentIcon: View {
 }
 
 // MARK: - Shared Helpers
-
-/// Inline markdown rendering (bold, italic, code, links)
-private var markdownCache: [String: AttributedString] = [:]
-private let markdownCacheLimit = 128
-
-private func inlineMarkdown(_ text: String) -> AttributedString {
-    if let cached = markdownCache[text] { return cached }
-    let result: AttributedString
-    if let attr = try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
-        result = attr
-    } else {
-        result = AttributedString(text)
-    }
-    if markdownCache.count >= markdownCacheLimit {
-        markdownCache.removeAll(keepingCapacity: true)
-    }
-    markdownCache[text] = result
-    return result
-}
